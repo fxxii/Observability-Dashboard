@@ -15,7 +15,10 @@ export async function handleGetRecent(req: Request): Promise<Response> {
   if (session_id) { conditions.push("session_id = ?"); params.push(session_id); }
   if (event_type) { conditions.push("event_type = ?"); params.push(event_type); }
   if (tag) { conditions.push("tags LIKE ?"); params.push(`%"${tag}"%`); }
-  if (since) { conditions.push("created_at > ?"); params.push(parseInt(since, 10)); }
+  if (since) {
+    const sinceMs = parseInt(since, 10);
+    if (!isNaN(sinceMs)) { conditions.push("created_at > ?"); params.push(sinceMs); }
+  }
 
   const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
   params.push(limit);
@@ -24,11 +27,13 @@ export async function handleGetRecent(req: Request): Promise<Response> {
     .prepare(`SELECT * FROM events ${where} ORDER BY created_at DESC LIMIT ?`)
     .all(...params) as Record<string, unknown>[];
 
-  const events = rows.map(r => ({
-    ...r,
-    payload: JSON.parse(r.payload as string),
-    tags: JSON.parse(r.tags as string),
-  }));
+  const events = rows.map(r => {
+    let payload: unknown = {};
+    let tags: unknown[] = [];
+    try { payload = JSON.parse(r.payload as string); } catch { /* use default */ }
+    try { tags = JSON.parse(r.tags as string); } catch { /* use default */ }
+    return { ...r, payload, tags };
+  });
 
   return Response.json({ events, total: events.length });
 }
