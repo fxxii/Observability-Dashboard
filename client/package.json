@@ -1,0 +1,24 @@
+{
+  "name": "observability-client",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "typecheck": "vue-tsc --noEmit",
+    "lint": "eslint src --ext .vue,.ts"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "pinia": "^2.1.7",
+    "@vueuse/core": "^10.9.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.2.0",
+    "typescript": "^5.4.0",
+    "vue-tsc": "^2.0.0",
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38"
+  }
+}
