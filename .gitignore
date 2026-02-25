@@ -1,0 +1,4 @@
+.agent-logs/
+.tmux-helpers.sh
+.agentic-loop.sh
+.worktrees/
