@@ -3,6 +3,7 @@ import { useWebSocket } from './composables/useWebSocket';
 import { useEventsStore } from './stores/events';
 import FilterBar from './components/FilterBar.vue';
 import EventTimeline from './components/EventTimeline.vue';
+import PulseChart from './components/PulseChart.vue';
 
 useWebSocket();
 const store = useEventsStore();
@@ -22,8 +23,13 @@ const store = useEventsStore();
 
     <FilterBar class="shrink-0" />
 
-    <div class="flex-1 min-h-0 bg-gray-900 rounded-lg p-3 border border-gray-800 overflow-hidden">
-      <EventTimeline />
+    <div class="flex flex-1 gap-3 min-h-0">
+      <div class="flex-1 min-w-0 bg-gray-900 rounded-lg p-3 border border-gray-800 overflow-hidden">
+        <EventTimeline />
+      </div>
+      <div class="w-64 shrink-0 bg-gray-900 rounded-lg p-3 border border-gray-800">
+        <PulseChart />
+      </div>
     </div>
   </div>
 </template>
