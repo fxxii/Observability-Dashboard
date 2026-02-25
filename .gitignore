@@ -3,3 +3,4 @@
 .agentic-loop.sh
 .worktrees/
 .setup-superpowers.sh
+node_modules/
