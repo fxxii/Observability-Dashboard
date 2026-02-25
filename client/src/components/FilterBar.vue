@@ -6,6 +6,7 @@ const store = useEventsStore();
 <template>
   <div class="flex flex-wrap gap-2 p-2 bg-gray-900 rounded-lg border border-gray-800">
     <select
+      aria-label="Filter by app"
       class="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded border border-gray-700"
       :value="store.filters.source_app ?? ''"
       @change="store.setFilter('source_app', ($event.target as HTMLSelectElement).value || null)"
@@ -15,6 +16,7 @@ const store = useEventsStore();
     </select>
 
     <select
+      aria-label="Filter by event type"
       class="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded border border-gray-700"
       :value="store.filters.event_type ?? ''"
       @change="store.setFilter('event_type', ($event.target as HTMLSelectElement).value || null)"
@@ -24,6 +26,7 @@ const store = useEventsStore();
     </select>
 
     <select
+      aria-label="Filter by session"
       class="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded border border-gray-700"
       :value="store.filters.session_id ?? ''"
       @change="store.setFilter('session_id', ($event.target as HTMLSelectElement).value || null)"
@@ -33,6 +36,7 @@ const store = useEventsStore();
     </select>
 
     <select
+      aria-label="Filter by tag"
       class="bg-gray-800 text-gray-300 text-xs px-2 py-1 rounded border border-gray-700"
       :value="store.filters.tag ?? ''"
       @change="store.setFilter('tag', ($event.target as HTMLSelectElement).value || null)"

@@ -28,6 +28,7 @@ watch(
   async () => {
     if (!autoScroll.value) return;
     await nextTick();
+    // Events store uses unshift(), so newest events are at index 0 (top of list); scroll to top to show them.
     if (listEl.value) listEl.value.scrollTop = 0;
   }
 );
