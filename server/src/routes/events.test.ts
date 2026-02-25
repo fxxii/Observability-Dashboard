@@ -60,4 +60,16 @@ describe("REQ-3: POST /events", () => {
     expect(JSON.parse(row.tags)).toContain("v1");
     expect(row.parent_session_id).toBe("parent-1");
   });
+
+  it("returns 400 on invalid JSON body", async () => {
+    const req = new Request("http://localhost:4000/events", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "not-valid-json",
+    });
+    const res = await handlePostEvent(req);
+    expect(res.status).toBe(400);
+    const data = await res.json() as any;
+    expect(data.error).toBe("Invalid JSON");
+  });
 });

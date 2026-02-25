@@ -1,5 +1,17 @@
 import { getDb } from "../db";
 
+interface EventRow {
+  id: number;
+  session_id: string;
+  event_type: string;
+  source_app: string;
+  payload: string;
+  tags: string;
+  parent_session_id: string | null;
+  trace_id: string | null;
+  created_at: number;
+}
+
 // WebSocket broadcast function — injected by index.ts
 export let broadcast: (data: string) => void = () => {};
 export function setBroadcast(fn: (data: string) => void) { broadcast = fn; }
@@ -30,7 +42,7 @@ export async function handlePostEvent(req: Request): Promise<Response> {
   );
 
   const id = result.lastInsertRowid;
-  const row = db.prepare("SELECT * FROM events WHERE id = ?").get(id) as any;
+  const row = db.prepare("SELECT * FROM events WHERE id = ?").get(id) as EventRow;
   const event = { ...row, payload: JSON.parse(row.payload), tags: JSON.parse(row.tags) };
   broadcast(JSON.stringify({ type: "event", data: event }));
 
