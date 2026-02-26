@@ -79,4 +79,22 @@ describe('REQ-6.2: POST /events', () => {
     const body = await res.json()
     expect(typeof body.id).toBe('number')
   })
+
+  it('REQ-6.2: returns 400 for invalid tags (non-array)', async () => {
+    const res = await app.handle(new Request('http://localhost/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'Stop', session_id: 's1', trace_id: 't1', tags: 'not-an-array' })
+    }))
+    expect(res.status).toBe(400)
+  })
+
+  it('REQ-6.2: returns 400 for invalid timestamp', async () => {
+    const res = await app.handle(new Request('http://localhost/events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'Stop', session_id: 's1', trace_id: 't1', timestamp: -1 })
+    }))
+    expect(res.status).toBe(400)
+  })
 })
