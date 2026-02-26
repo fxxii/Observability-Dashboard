@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'bun:test'
-import { initDb, getDb } from '../src/db'
+import { initDb, getDb, _resetDbForTesting } from '../src/db'
 import { unlinkSync, existsSync } from 'fs'
 import { tmpdir } from 'os'
 import { join } from 'path'
@@ -41,5 +41,12 @@ describe('REQ-6.2: database', () => {
     expect(names).toContain('tags')
     expect(names).toContain('payload')
     expect(names).toContain('timestamp')
+  })
+
+  it('REQ-6.2: getDb throws if called before initDb', () => {
+    _resetDbForTesting()
+    expect(() => getDb()).toThrow('DB not initialized')
+    // Re-initialize for subsequent tests
+    initDb(':memory:')
   })
 })

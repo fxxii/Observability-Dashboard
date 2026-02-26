@@ -27,3 +27,8 @@ export function getDb(): Database {
   if (!db) throw new Error('DB not initialized — call initDb() first')
   return db
 }
+
+/** For testing only — resets the db instance so getDb() throws again */
+export function _resetDbForTesting() {
+  db = undefined as unknown as Database
+}
