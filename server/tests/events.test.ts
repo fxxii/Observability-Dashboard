@@ -146,6 +146,28 @@ describe('REQ-6.2: GET /events/recent', () => {
     const body = await res.json()
     expect(body.limit).toBe(500)
   })
+
+  it('REQ-6.2: filters by tag', async () => {
+    await app.handle(new Request('http://localhost/events', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'Notification', session_id: 'tag-sess', trace_id: 'tag-trace', source_app: 'tag-app', tags: ['my-tag'], payload: {} })
+    }))
+    const res = await app.handle(new Request('http://localhost/events/recent?tag=my-tag'))
+    const body = await res.json()
+    expect(body.events.length).toBeGreaterThan(0)
+    const tags = body.events.map((e: any) => JSON.parse(e.tags)).flat()
+    expect(tags).toContain('my-tag')
+  })
+
+  it('REQ-6.2: offset paginates results', async () => {
+    const res1 = await app.handle(new Request('http://localhost/events/recent?limit=1&offset=0'))
+    const res2 = await app.handle(new Request('http://localhost/events/recent?limit=1&offset=1'))
+    const body1 = await res1.json()
+    const body2 = await res2.json()
+    expect(body1.events.length).toBe(1)
+    expect(body2.events.length).toBe(1)
+    expect(body1.events[0].id).not.toBe(body2.events[0].id)
+  })
 })
 
 describe('REQ-6.2: GET /events/filter-options', () => {

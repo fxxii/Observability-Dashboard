@@ -74,33 +74,56 @@ export const eventsRouter = new Elysia()
       return { error: `Database error: ${err instanceof Error ? err.message : String(err)}` }
     }
   })
-  .get('/events/recent', ({ query }) => {
-    const db = getDb()
-    const limit  = Math.min(Number(query.limit)  || 100, 500)
-    const offset = Number(query.offset) || 0
+  .get('/events/recent', ({ query, set }) => {
+    try {
+      const db = getDb()
+      const limit  = Math.min(Math.max(0, Math.floor(Number(query.limit)  || 100)), 500)  // also fixes I1
+      const offset = Math.max(0, Math.floor(Number(query.offset) || 0))                    // also fixes I1
 
-    const conditions: string[] = []
-    const params: Record<string, unknown> = {}
+      const conditions: string[] = []
+      const params: Record<string, unknown> = {}
 
-    if (query.source_app) { conditions.push('source_app = $source_app'); params.$source_app = query.source_app }
-    if (query.session_id)  { conditions.push('session_id = $session_id');  params.$session_id  = query.session_id }
-    if (query.event_type)  { conditions.push('event_type = $event_type');  params.$event_type  = query.event_type }
-    if (query.tag)         { conditions.push('tags LIKE $tag');             params.$tag         = `%"${String(query.tag)}"%` }
+      if (query.source_app) { conditions.push('source_app = $source_app'); params.$source_app = query.source_app }
+      if (query.session_id)  { conditions.push('session_id = $session_id');  params.$session_id  = query.session_id }
+      if (query.event_type)  { conditions.push('event_type = $event_type');  params.$event_type  = query.event_type }
+      if (query.tag) {
+        // I2 fix: escape LIKE metacharacters in tag value
+        const escapedTag = String(query.tag).replace(/%/g, '\\%').replace(/_/g, '\\_')
+        conditions.push("tags LIKE $tag ESCAPE '\\'")
+        params.$tag = `%"${escapedTag}"%`
+      }
 
-    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+      const events   = db.query(`SELECT * FROM events ${where} ORDER BY timestamp DESC LIMIT ${limit} OFFSET ${offset}`).all(params)
+      const totalRow = db.query(`SELECT COUNT(*) as count FROM events ${where}`).get(params) as { count: number }
 
-    const events   = db.query(`SELECT * FROM events ${where} ORDER BY timestamp DESC LIMIT ${limit} OFFSET ${offset}`).all(params)
-    const totalRow = db.query(`SELECT COUNT(*) as count FROM events ${where}`).get(params) as { count: number }
-
-    return { events, total: totalRow.count, limit, offset }
+      return { events, total: totalRow.count, limit, offset }
+    } catch (err) {
+      set.status = 500
+      return { error: `Database error: ${err instanceof Error ? err.message : String(err)}` }
+    }
   })
-  .get('/events/filter-options', () => {
-    const db = getDb()
-    const apps     = (db.query('SELECT DISTINCT source_app FROM events ORDER BY source_app').all() as any[]).map(r => r.source_app)
-    const sessions = (db.query('SELECT DISTINCT session_id FROM events ORDER BY id DESC LIMIT 100').all() as any[]).map(r => r.session_id)
-    const types    = (db.query('SELECT DISTINCT event_type FROM events ORDER BY event_type').all() as any[]).map(r => r.event_type)
-    const tagRows  = db.query("SELECT tags FROM events WHERE tags != '[]'").all() as any[]
-    const tagSet   = new Set<string>()
-    tagRows.forEach(r => { try { (JSON.parse(r.tags) as string[]).forEach(t => tagSet.add(t)) } catch {} })
-    return { apps, sessions, event_types: types, tags: [...tagSet].sort() }
+  .get('/events/filter-options', ({ set }) => {
+    try {
+      const db = getDb()
+      const apps     = (db.query('SELECT DISTINCT source_app FROM events ORDER BY source_app').all() as any[]).map(r => r.source_app as string)
+      const sessions = (db.query('SELECT DISTINCT session_id FROM events ORDER BY id DESC LIMIT 100').all() as any[]).map(r => r.session_id as string)
+      const types    = (db.query('SELECT DISTINCT event_type FROM events ORDER BY event_type').all() as any[]).map(r => r.event_type as string)
+      const tagRows  = db.query("SELECT tags FROM events WHERE tags != '[]'").all() as any[]
+      const tagSet   = new Set<string>()
+      tagRows.forEach(r => {
+        try {
+          const parsed = JSON.parse(r.tags)
+          if (Array.isArray(parsed)) {
+            parsed.forEach(t => { if (typeof t === 'string') tagSet.add(t) })
+          }
+        } catch (e) {
+          console.error('[filter-options] Failed to parse tags:', r.tags, e)
+        }
+      })
+      return { apps, sessions, event_types: types, tags: [...tagSet].sort() }
+    } catch (err) {
+      set.status = 500
+      return { error: `Database error: ${err instanceof Error ? err.message : String(err)}` }
+    }
   })
