@@ -2,7 +2,7 @@ import { Elysia } from 'elysia'
 import { cors } from '@elysiajs/cors'
 
 const app = new Elysia()
-  .use(cors())
+  .use(cors({ origin: process.env.CORS_ORIGIN ?? 'http://localhost:5173' }))
   .get('/health', () => ({ status: 'ok' }))
 
 if (process.env.NODE_ENV !== 'test') {

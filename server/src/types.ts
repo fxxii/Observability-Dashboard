@@ -16,7 +16,7 @@ export interface StoredEvent {
   trace_id: string
   parent_session_id?: string | null
   source_app: string
-  tags: string      // JSON array string
+  tags: string      // JSON-serialized array; parse with JSON.parse(tags) before use
   payload: string   // JSON object string
   timestamp: number
 }
