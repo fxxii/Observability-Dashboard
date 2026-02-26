@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { useEventsStore } from './events';
 
 // PreCompact events within this window indicate context pressure
+// created_at is epoch ms (DB stores as CAST(unixepoch('subsec') * 1000 AS INTEGER))
 const COMPACT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 
 export const useMetricsStore = defineStore('metrics', () => {

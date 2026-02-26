@@ -13,6 +13,7 @@ const gauges = computed(() =>
 );
 
 // Estimate fill % based on compact count (rough heuristic)
+// Heuristic: min 20% fill, +15% per compaction, capped at 100%
 function fillPct(compactCount: number): number {
   return Math.min(20 + compactCount * 15, 100);
 }
