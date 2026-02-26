@@ -5,6 +5,7 @@ import FilterBar from './components/FilterBar.vue';
 import EventTimeline from './components/EventTimeline.vue';
 import PulseChart from './components/PulseChart.vue';
 import SwimLanes from './components/SwimLanes.vue';
+import ContextHeatmap from './components/ContextHeatmap.vue';
 
 useWebSocket();
 const store = useEventsStore();
@@ -31,6 +32,9 @@ const store = useEventsStore();
       <div class="w-72 shrink-0 flex flex-col gap-3">
         <div class="h-36 bg-gray-900 rounded-lg p-3 border border-gray-800">
           <PulseChart />
+        </div>
+        <div class="h-44 bg-gray-900 rounded-lg p-3 border border-gray-800 overflow-hidden">
+          <ContextHeatmap />
         </div>
         <div class="flex-1 bg-gray-900 rounded-lg p-3 border border-gray-800 overflow-hidden">
           <SwimLanes />
