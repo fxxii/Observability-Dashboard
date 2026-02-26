@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
 import { getDb } from '../db'
+import { broadcast } from '../broadcast'
 
 const REQUIRED_STRING_FIELDS = ['event_type', 'session_id', 'trace_id'] as const
 
@@ -68,6 +69,7 @@ export const eventsRouter = new Elysia()
         $timestamp:         timestamp,
       })
       set.status = 201
+      broadcast({ id: Number(result.lastInsertRowid), event_type: event.event_type, session_id: event.session_id, trace_id: event.trace_id, parent_session_id: parentSessionId, source_app: typeof event.source_app === 'string' ? event.source_app : 'unknown', tags: JSON.stringify(tags), payload: JSON.stringify(payloadObj), timestamp })
       return { id: Number(result.lastInsertRowid), timestamp }
     } catch (err) {
       set.status = 500
