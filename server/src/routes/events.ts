@@ -74,3 +74,33 @@ export const eventsRouter = new Elysia()
       return { error: `Database error: ${err instanceof Error ? err.message : String(err)}` }
     }
   })
+  .get('/events/recent', ({ query }) => {
+    const db = getDb()
+    const limit  = Math.min(Number(query.limit)  || 100, 500)
+    const offset = Number(query.offset) || 0
+
+    const conditions: string[] = []
+    const params: Record<string, unknown> = {}
+
+    if (query.source_app) { conditions.push('source_app = $source_app'); params.$source_app = query.source_app }
+    if (query.session_id)  { conditions.push('session_id = $session_id');  params.$session_id  = query.session_id }
+    if (query.event_type)  { conditions.push('event_type = $event_type');  params.$event_type  = query.event_type }
+    if (query.tag)         { conditions.push('tags LIKE $tag');             params.$tag         = `%"${String(query.tag)}"%` }
+
+    const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
+
+    const events   = db.query(`SELECT * FROM events ${where} ORDER BY timestamp DESC LIMIT ${limit} OFFSET ${offset}`).all(params)
+    const totalRow = db.query(`SELECT COUNT(*) as count FROM events ${where}`).get(params) as { count: number }
+
+    return { events, total: totalRow.count, limit, offset }
+  })
+  .get('/events/filter-options', () => {
+    const db = getDb()
+    const apps     = (db.query('SELECT DISTINCT source_app FROM events ORDER BY source_app').all() as any[]).map(r => r.source_app)
+    const sessions = (db.query('SELECT DISTINCT session_id FROM events ORDER BY id DESC LIMIT 100').all() as any[]).map(r => r.session_id)
+    const types    = (db.query('SELECT DISTINCT event_type FROM events ORDER BY event_type').all() as any[]).map(r => r.event_type)
+    const tagRows  = db.query("SELECT tags FROM events WHERE tags != '[]'").all() as any[]
+    const tagSet   = new Set<string>()
+    tagRows.forEach(r => { try { (JSON.parse(r.tags) as string[]).forEach(t => tagSet.add(t)) } catch {} })
+    return { apps, sessions, event_types: types, tags: [...tagSet].sort() }
+  })

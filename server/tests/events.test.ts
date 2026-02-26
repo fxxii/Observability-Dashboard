@@ -98,3 +98,70 @@ describe('REQ-6.2: POST /events', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('REQ-6.2: GET /events/recent', () => {
+  it('REQ-6.2: returns events newest-first with total count', async () => {
+    const res = await app.handle(new Request('http://localhost/events/recent'))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(Array.isArray(body.events)).toBe(true)
+    expect(typeof body.total).toBe('number')
+    expect(typeof body.limit).toBe('number')
+    expect(typeof body.offset).toBe('number')
+  })
+
+  it('REQ-6.2: filters by source_app', async () => {
+    // seed a unique app
+    await app.handle(new Request('http://localhost/events', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event_type: 'SessionStart', session_id: 'filter-sess', trace_id: 'filter-trace', source_app: 'unique-app-xyz', tags: [], payload: {} })
+    }))
+    const res = await app.handle(new Request('http://localhost/events/recent?source_app=unique-app-xyz'))
+    const body = await res.json()
+    expect(body.events.every((e: any) => e.source_app === 'unique-app-xyz')).toBe(true)
+    expect(body.events.length).toBeGreaterThan(0)
+  })
+
+  it('REQ-6.2: filters by event_type', async () => {
+    const res = await app.handle(new Request('http://localhost/events/recent?event_type=SessionStart'))
+    const body = await res.json()
+    expect(body.events.every((e: any) => e.event_type === 'SessionStart')).toBe(true)
+  })
+
+  it('REQ-6.2: filters by session_id', async () => {
+    const res = await app.handle(new Request('http://localhost/events/recent?session_id=sess-123'))
+    const body = await res.json()
+    expect(body.events.every((e: any) => e.session_id === 'sess-123')).toBe(true)
+  })
+
+  it('REQ-6.2: respects limit parameter (max 500)', async () => {
+    const res = await app.handle(new Request('http://localhost/events/recent?limit=2'))
+    const body = await res.json()
+    expect(body.events.length).toBeLessThanOrEqual(2)
+    expect(body.limit).toBe(2)
+  })
+
+  it('REQ-6.2: clamps limit to 500 max', async () => {
+    const res = await app.handle(new Request('http://localhost/events/recent?limit=9999'))
+    const body = await res.json()
+    expect(body.limit).toBe(500)
+  })
+})
+
+describe('REQ-6.2: GET /events/filter-options', () => {
+  it('REQ-6.2: returns distinct apps, sessions, event_types, tags', async () => {
+    const res = await app.handle(new Request('http://localhost/events/filter-options'))
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(Array.isArray(body.apps)).toBe(true)
+    expect(Array.isArray(body.sessions)).toBe(true)
+    expect(Array.isArray(body.event_types)).toBe(true)
+    expect(Array.isArray(body.tags)).toBe(true)
+  })
+
+  it('REQ-6.2: filter-options includes seeded app', async () => {
+    const res = await app.handle(new Request('http://localhost/events/filter-options'))
+    const body = await res.json()
+    expect(body.apps).toContain('unique-app-xyz')
+  })
+})
