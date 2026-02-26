@@ -14,6 +14,10 @@ export function useWebSocket() {
   async function loadInitialEvents() {
     try {
       const res = await fetch(`${REST_URL}/events/recent?limit=100`)
+      if (!res.ok) {
+        console.warn('[WS] Failed to load initial events: HTTP', res.status)
+        return
+      }
       const data = await res.json()
       store.setEvents((data.events as StoredEvent[]).reverse())
     } catch (err) {
@@ -24,14 +28,21 @@ export function useWebSocket() {
   function connect() {
     ws = new WebSocket(WS_URL)
     ws.onopen = () => { connected.value = true; console.log('[WS] Connected') }
-    ws.onmessage = (e) => {
-      try { store.addEvent(JSON.parse(e.data) as StoredEvent) } catch {}
+    ws.onmessage = (e: MessageEvent) => {
+      try {
+        store.addEvent(JSON.parse(e.data as string) as StoredEvent)
+      } catch (err) {
+        console.warn('[WS] Failed to parse message:', err)
+      }
     }
     ws.onclose = () => {
       connected.value = false
       retryTimer = setTimeout(connect, 3000)  // auto-reconnect
     }
-    ws.onerror = () => ws?.close()
+    ws.onerror = (err) => {
+      console.warn('[WS] WebSocket error:', err)
+      // onclose will fire automatically after onerror, triggering reconnect
+    }
   }
 
   onMounted(async () => {

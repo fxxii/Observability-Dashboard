@@ -36,4 +36,21 @@ describe('useEventsStore', () => {
     store.clearFilters()
     expect(store.activeFilters.source_app).toBeNull()
   })
+
+  it('filteredEvents filters by tag', () => {
+    const store = useEventsStore()
+    store.addEvent({ id: 1, event_type: 'PreToolUse', session_id: 's1', trace_id: 't1', source_app: 'app-a', tags: '["mcp"]', payload: '{}', timestamp: 1000 })
+    store.addEvent({ id: 2, event_type: 'PostToolUse', session_id: 's2', trace_id: 't2', source_app: 'app-b', tags: '["other"]', payload: '{}', timestamp: 2000 })
+    store.setFilter('tag', 'mcp')
+    expect(store.filteredEvents).toHaveLength(1)
+    expect(store.filteredEvents[0].id).toBe(1)
+  })
+
+  it('addEvent caps list at 2000 events', () => {
+    const store = useEventsStore()
+    for (let i = 0; i < 2001; i++) {
+      store.addEvent({ id: i, event_type: 'SessionStart', session_id: 's1', trace_id: 't1', source_app: 'app', tags: '[]', payload: '{}', timestamp: i })
+    }
+    expect(store.events).toHaveLength(2000)
+  })
 })

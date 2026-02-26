@@ -38,8 +38,12 @@ export const useEventsStore = defineStore('events', () => {
       if (f.session_id && e.session_id !== f.session_id) return false
       if (f.event_type && e.event_type !== f.event_type) return false
       if (f.tag) {
-        try { if (!JSON.parse(e.tags).includes(f.tag)) return false }
-        catch { return false }
+        try {
+          if (!(JSON.parse(e.tags) as string[]).includes(f.tag)) return false
+        } catch (err) {
+          console.warn('[Store] Malformed tags JSON for event', e.id, err)
+          return false
+        }
       }
       return true
     })
