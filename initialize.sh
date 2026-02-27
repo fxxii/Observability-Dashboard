@@ -168,7 +168,7 @@ success "settings.json written"
 if [[ ! -d "${TARGET_PATH}/.git" ]]; then
   echo ""
   read -r -p "  Initialise a git repository in ${TARGET_PATH}? [y/N] " INIT_GIT
-  if [[ "${INIT_GIT,,}" == "y" ]]; then
+  if [[ "${INIT_GIT}" == "y" || "${INIT_GIT}" == "Y" ]]; then
     git -C "${TARGET_PATH}" init -q
     # Add a minimal .gitignore if one doesn't exist
     if [[ ! -f "${TARGET_PATH}/.gitignore" ]]; then

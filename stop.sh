@@ -36,7 +36,7 @@ if [[ ! -f "${PID_FILE}" ]]; then
       if [[ -n "${PIDS}" ]]; then
         echo -e "${YELLOW}  ⚠${RESET} Found process on port ${PORT}: PID(s) ${PIDS}"
         read -r -p "  Kill process(es) on :${PORT}? [y/N] " CONFIRM
-        if [[ "${CONFIRM,,}" == "y" ]]; then
+        if [[ "${CONFIRM}" == "y" || "${CONFIRM}" == "Y" ]]; then
           echo "${PIDS}" | xargs kill 2>/dev/null && success "Killed process(es) on :${PORT}" || warn "Could not kill all processes"
           FOUND=true
         fi
