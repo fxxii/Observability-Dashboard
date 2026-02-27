@@ -13,8 +13,11 @@ export function useContextPressure() {
     const sessions = new Set(store.events.map(e => e.session_id))
     sessions.forEach(sid => {
       const count = store.events.filter(e => e.session_id === sid && e.event_type === 'PreCompact' && e.timestamp >= now - windowMs).length
-      const status: PressureStatus = count >= 3 ? 'red' : count >= 1 ? 'amber' : 'green'
-      result[sid] = { status, compactCount: count, fillPercent: Math.min(count * 33, 100) }
+      const fillPercent = Math.min(count * 40, 100)
+      let status: PressureStatus = 'green'
+      if (count >= 3) status = 'red'
+      else if (fillPercent >= 80) status = 'amber'
+      result[sid] = { status, compactCount: count, fillPercent }
     })
     return result
   })
