@@ -12,6 +12,7 @@ export interface ActiveFilters {
 export const useEventsStore = defineStore('events', () => {
   const events = ref<StoredEvent[]>([])
   const activeFilters = ref<ActiveFilters>({ source_app: null, session_id: null, event_type: null, tag: null })
+  const rewindTime = ref<number | null>(null)
   const maxEvents = 2000
 
   function addEvent(event: StoredEvent) {
@@ -31,9 +32,14 @@ export const useEventsStore = defineStore('events', () => {
     activeFilters.value = { source_app: null, session_id: null, event_type: null, tag: null }
   }
 
+  function setRewindTime(ts: number) { rewindTime.value = ts }
+  function clearRewind() { rewindTime.value = null }
+
   const filteredEvents = computed<StoredEvent[]>(() => {
     const f = activeFilters.value
+    const rw = rewindTime.value
     return events.value.filter(e => {
+      if (rw !== null && e.timestamp > rw) return false
       if (f.source_app && e.source_app !== f.source_app) return false
       if (f.session_id && e.session_id !== f.session_id) return false
       if (f.event_type && e.event_type !== f.event_type) return false
@@ -67,5 +73,5 @@ export const useEventsStore = defineStore('events', () => {
     return Object.fromEntries(seen)
   })
 
-  return { events, activeFilters, filteredEvents, sessionColors, appColors, addEvent, setEvents, setFilter, clearFilters }
+  return { events, activeFilters, filteredEvents, sessionColors, appColors, addEvent, setEvents, setFilter, clearFilters, rewindTime, setRewindTime, clearRewind }
 })
