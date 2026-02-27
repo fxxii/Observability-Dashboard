@@ -1,6 +1,20 @@
 <template>
-  <div class="min-h-screen bg-surface text-gray-100 p-4">
-    <h1 class="text-xl font-bold text-cyan-400">Agent Observability Dashboard</h1>
-    <p class="text-gray-500 text-sm">Connecting to server...</p>
+  <div class="h-screen flex flex-col overflow-hidden bg-surface">
+    <DashboardLayout>
+      <template #auditor><AuditorPanel /></template>
+      <template #critic><CriticPanel /></template>
+      <template #lead><LeadPanel /></template>
+      <template #timeline><TimelinePanel /></template>
+      <template #pulse><PulsePanel /></template>
+    </DashboardLayout>
   </div>
 </template>
+
+<script setup lang="ts">
+import DashboardLayout from './components/DashboardLayout.vue'
+import AuditorPanel from './components/panels/AuditorPanel.vue'
+import CriticPanel from './components/panels/CriticPanel.vue'
+import LeadPanel from './components/panels/LeadPanel.vue'
+import TimelinePanel from './components/panels/TimelinePanel.vue'
+import PulsePanel from './components/panels/PulsePanel.vue'
+</script>
