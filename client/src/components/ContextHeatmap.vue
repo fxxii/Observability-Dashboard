@@ -1,52 +1,21 @@
-<script setup lang="ts">
-import { computed } from 'vue';
-import { useMetricsStore } from '../stores/metrics';
-
-const metricsStore = useMetricsStore();
-
-const gauges = computed(() =>
-  [...metricsStore.sessionMetrics.entries()].map(([sid, m]) => ({
-    session_id: sid,
-    shortId: sid.slice(0, 8),
-    ...m,
-  }))
-);
-
-// Estimate fill % based on compact count (rough heuristic)
-// Heuristic: min 20% fill, +15% per compaction, capped at 100%
-function fillPct(compactCount: number): number {
-  return Math.min(20 + compactCount * 15, 100);
-}
-
-function barColor(status: string): string {
-  if (status === 'critical') return 'bg-red-500';
-  if (status === 'warning') return 'bg-amber-500';
-  return 'bg-green-500';
-}
-</script>
-
 <template>
-  <div class="flex flex-col h-full">
-    <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2 shrink-0">🧠 Context Pressure</h2>
-    <div class="flex-1 overflow-y-auto space-y-2">
-      <div v-for="g in gauges" :key="g.session_id" class="bg-gray-800 rounded p-2">
-        <div class="flex justify-between text-xs mb-1">
-          <span class="text-gray-300 font-mono">{{ g.shortId }}</span>
-          <span :class="g.status === 'critical' ? 'text-red-400' : g.status === 'warning' ? 'text-amber-400' : 'text-gray-500'">
-            {{ g.compactCount }}× compact
-            <span v-if="g.status === 'critical'"> 🔴</span>
-            <span v-else-if="g.status === 'warning'"> 🟡</span>
-          </span>
-        </div>
-        <div class="w-full bg-gray-700 rounded-full h-1.5">
-          <div
-            class="h-1.5 rounded-full transition-all"
-            :class="barColor(g.status)"
-            :style="{ width: `${fillPct(g.compactCount)}%` }"
-          />
-        </div>
+  <div class="p-3 text-xs">
+    <div class="text-gray-500 font-semibold mb-2">🧠 Context Window</div>
+    <div v-if="Object.keys(pressureBySession).length === 0" class="text-gray-700">No active sessions</div>
+    <div v-for="(pressure, sid) in pressureBySession" :key="sid" class="mb-2">
+      <div class="flex items-center justify-between mb-1">
+        <span class="font-mono text-gray-400">{{ String(sid).slice(0, 8) }}</span>
+        <span :class="badgeClass(pressure.status)" class="px-1.5 py-0.5 rounded text-[10px]">{{ pressure.status.toUpperCase() }}{{ pressure.compactCount > 0 ? ` (${pressure.compactCount}× compact)` : '' }}</span>
       </div>
-      <div v-if="gauges.length === 0" class="text-gray-600 text-xs p-2 text-center">No context data</div>
+      <div class="w-full bg-surface rounded-full h-1.5 overflow-hidden">
+        <div :class="barClass(pressure.status)" class="h-full rounded-full transition-all duration-500" :style="{ width: `${pressure.fillPercent}%` }" />
+      </div>
     </div>
   </div>
 </template>
+<script setup lang="ts">
+import { useContextPressure } from '../composables/useContextPressure'
+const { pressureBySession } = useContextPressure()
+function badgeClass(s: string) { return s === 'red' ? 'bg-red-900 text-red-300' : s === 'amber' ? 'bg-amber-900 text-amber-300' : 'bg-green-900/50 text-green-400' }
+function barClass(s: string) { return s === 'red' ? 'bg-red-500' : s === 'amber' ? 'bg-amber-500' : 'bg-green-500' }
+</script>

@@ -1,24 +1,32 @@
 {
-  "name": "observability-client",
-  "version": "1.0.0",
+  "name": "client",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc --noEmit && vite build",
+    "build": "vue-tsc && vite build",
     "typecheck": "vue-tsc --noEmit",
-    "lint": "eslint src --ext .vue,.ts"
+    "lint": "eslint src/",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "vue": "^3.4.0",
-    "pinia": "^2.1.7",
-    "@vueuse/core": "^10.9.0"
+    "pinia": "^3.0.4",
+    "vue": "^3.5.25"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.4",
-    "vite": "^5.2.0",
-    "typescript": "^5.4.0",
-    "vue-tsc": "^2.0.0",
-    "tailwindcss": "^3.4.0",
-    "autoprefixer": "^10.4.19",
-    "postcss": "^8.4.38"
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.2",
+    "@vue/test-utils": "^2.4.6",
+    "@vue/tsconfig": "^0.8.1",
+    "autoprefixer": "^10.4.27",
+    "happy-dom": "^20.7.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18",
+    "vue-tsc": "^3.1.5"
   }
 }

@@ -1,30 +1,34 @@
-import { Database } from "bun:sqlite";
+import { Database } from 'bun:sqlite'
 
-let _db: Database | null = null;
+let db: Database
 
-export function initDb(path = "./events.db"): void {
-  _db = new Database(path);
-  _db.run("PRAGMA journal_mode = WAL");
-  _db.run(`
+export function initDb(path = 'data.sqlite') {
+  db = new Database(path, { create: true })
+  db.exec('PRAGMA journal_mode = WAL')
+  db.exec(`
     CREATE TABLE IF NOT EXISTS events (
       id                INTEGER PRIMARY KEY AUTOINCREMENT,
-      session_id        TEXT    NOT NULL,
       event_type        TEXT    NOT NULL,
-      source_app        TEXT    NOT NULL DEFAULT 'unknown',
-      payload           TEXT    NOT NULL DEFAULT '{}',
-      tags              TEXT    NOT NULL DEFAULT '[]',
+      session_id        TEXT    NOT NULL,
+      trace_id          TEXT    NOT NULL,
       parent_session_id TEXT,
-      trace_id          TEXT,
-      created_at        INTEGER NOT NULL DEFAULT (CAST(unixepoch('subsec') * 1000 AS INTEGER))
+      source_app        TEXT    NOT NULL DEFAULT 'unknown',
+      tags              TEXT    NOT NULL DEFAULT '[]',
+      payload           TEXT    NOT NULL DEFAULT '{}',
+      timestamp         INTEGER NOT NULL
     )
-  `);
-  _db.run("CREATE INDEX IF NOT EXISTS idx_session    ON events(session_id)");
-  _db.run("CREATE INDEX IF NOT EXISTS idx_event_type ON events(event_type)");
-  _db.run("CREATE INDEX IF NOT EXISTS idx_created_at ON events(created_at)");
-  _db.run("CREATE INDEX IF NOT EXISTS idx_source_app ON events(source_app)");
+  `)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_events_session   ON events(session_id)`)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_events_timestamp ON events(timestamp)`)
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_events_type      ON events(event_type)`)
 }
 
 export function getDb(): Database {
-  if (!_db) throw new Error("DB not initialized — call initDb() first");
-  return _db;
+  if (!db) throw new Error('DB not initialized — call initDb() first')
+  return db
+}
+
+/** For testing only — resets the db instance so getDb() throws again */
+export function _resetDbForTesting() {
+  db = undefined as unknown as Database
 }

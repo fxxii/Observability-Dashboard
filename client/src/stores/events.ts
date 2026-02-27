@@ -1,37 +1,77 @@
-import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import type { ObsEvent, FilterState } from '../types';
+import { defineStore } from 'pinia'
+import { ref, computed } from 'vue'
+import type { StoredEvent } from '../types/events'
 
-const MAX_EVENTS = 2000;
+export interface ActiveFilters {
+  source_app: string | null
+  session_id: string | null
+  event_type: string | null
+  tag: string | null
+}
 
 export const useEventsStore = defineStore('events', () => {
-  const events = ref<ObsEvent[]>([]);
-  const filters = ref<FilterState>({ source_app: null, session_id: null, event_type: null, tag: null });
-  const connected = ref(false);
+  const events = ref<StoredEvent[]>([])
+  const activeFilters = ref<ActiveFilters>({ source_app: null, session_id: null, event_type: null, tag: null })
+  const rewindTime = ref<number | null>(null)
+  const maxEvents = 2000
 
-  const filteredEvents = computed(() => {
-    const f = filters.value;
-    return events.value.filter(e => {
-      if (f.source_app && e.source_app !== f.source_app) return false;
-      if (f.session_id && e.session_id !== f.session_id) return false;
-      if (f.event_type && e.event_type !== f.event_type) return false;
-      if (f.tag && !e.tags.includes(f.tag)) return false;
-      return true;
-    });
-  });
-
-  function addEvent(event: ObsEvent) {
-    events.value.unshift(event);
-    if (events.value.length > MAX_EVENTS) events.value.pop();
+  function addEvent(event: StoredEvent) {
+    events.value.unshift(event)
+    if (events.value.length > maxEvents) events.value.splice(maxEvents)
   }
 
-  function setEvents(evts: ObsEvent[]) { events.value = evts; }
-  function setFilter(key: keyof FilterState, value: string | null) { filters.value[key] = value; }
+  function setEvents(newEvents: StoredEvent[]) {
+    events.value = newEvents
+  }
 
-  const allSessions = computed(() => [...new Set(events.value.map(e => e.session_id))]);
-  const allApps = computed(() => [...new Set(events.value.map(e => e.source_app))]);
-  const allEventTypes = computed(() => [...new Set(events.value.map(e => e.event_type))]);
-  const allTags = computed(() => [...new Set(events.value.flatMap(e => e.tags))]);
+  function setFilter(key: keyof ActiveFilters, value: string | null) {
+    activeFilters.value[key] = value
+  }
 
-  return { events, filters, connected, filteredEvents, addEvent, setEvents, setFilter, allSessions, allApps, allEventTypes, allTags };
-});
+  function clearFilters() {
+    activeFilters.value = { source_app: null, session_id: null, event_type: null, tag: null }
+  }
+
+  function setRewindTime(ts: number) { rewindTime.value = ts }
+  function clearRewind() { rewindTime.value = null }
+
+  const filteredEvents = computed<StoredEvent[]>(() => {
+    const f = activeFilters.value
+    const rw = rewindTime.value
+    return events.value.filter(e => {
+      if (rw !== null && e.timestamp > rw) return false
+      if (f.source_app && e.source_app !== f.source_app) return false
+      if (f.session_id && e.session_id !== f.session_id) return false
+      if (f.event_type && e.event_type !== f.event_type) return false
+      if (f.tag) {
+        try {
+          if (!(JSON.parse(e.tags) as string[]).includes(f.tag)) return false
+        } catch (err) {
+          console.warn('[Store] Malformed tags JSON for event', e.id, err)
+          return false
+        }
+      }
+      return true
+    })
+  })
+
+  const sessionColors = computed<Record<string, string>>(() => {
+    const palette = ['#06b6d4','#8b5cf6','#f59e0b','#10b981','#ef4444','#ec4899','#3b82f6','#84cc16']
+    const seen = new Map<string, string>()
+    events.value.forEach(e => {
+      if (!seen.has(e.session_id)) seen.set(e.session_id, palette[seen.size % palette.length])
+    })
+    return Object.fromEntries(seen)
+  })
+
+  const appColors = computed<Record<string, string>>(() => {
+    const palette = ['#f97316','#06b6d4','#a855f7','#22c55e','#eab308','#14b8a6','#f43f5e','#64748b']
+    const seen = new Map<string, string>()
+    events.value.forEach(e => {
+      if (!seen.has(e.source_app)) seen.set(e.source_app, palette[seen.size % palette.length])
+    })
+    return Object.fromEntries(seen)
+  })
+
+  return { events, activeFilters, filteredEvents, sessionColors, appColors, addEvent, setEvents, setFilter, clearFilters, rewindTime, setRewindTime, clearRewind }
+})

@@ -1,89 +1,127 @@
-<script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue';
-import { useEventsStore } from '../stores/events';
-
-const store = useEventsStore();
-const canvasEl = ref<HTMLCanvasElement | null>(null);
-const timeRange = ref<1 | 3 | 5>(1);
-
-const hues = new Map<string, number>();
-let hueCounter = 0;
-function hue(id: string): number {
-  if (!hues.has(id)) hues.set(id, (hueCounter++ * 137.5) % 360);
-  return hues.get(id)!;
-}
-
-function draw() {
-  const canvas = canvasEl.value;
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return;
-  const w = canvas.width = canvas.offsetWidth;
-  const h = canvas.height = canvas.offsetHeight;
-  ctx.clearRect(0, 0, w, h);
-
-  const now = Date.now();
-  const windowMs = timeRange.value * 60 * 1000;
-  const BUCKETS = 60;
-  const bucketMs = windowMs / BUCKETS;
-
-  const data: { count: number; sessions: Set<string> }[] = Array.from(
-    { length: BUCKETS }, () => ({ count: 0, sessions: new Set<string>() })
-  );
-
-  for (const e of store.filteredEvents) {
-    const age = now - e.created_at;
-    if (age > windowMs || age < 0) continue;
-    const idx = Math.floor((windowMs - age) / bucketMs);
-    if (idx >= 0 && idx < BUCKETS) {
-      data[idx].count++;
-      data[idx].sessions.add(e.session_id);
-    }
-  }
-
-  const maxCount = Math.max(...data.map(b => b.count), 1);
-  const barW = (w / BUCKETS) - 1;
-
-  for (let i = 0; i < BUCKETS; i++) {
-    const b = data[i];
-    if (b.count === 0) continue;
-    const barH = Math.max(4, (b.count / maxCount) * (h - 16));
-    const x = i * (barW + 1);
-    const y = h - barH;
-    const sessionHue = b.sessions.size > 0 ? hue([...b.sessions][0]) : 200;
-    ctx.fillStyle = `hsla(${sessionHue}, 70%, 55%, 0.85)`;
-    ctx.shadowColor = `hsl(${sessionHue}, 70%, 55%)`;
-    ctx.shadowBlur = 4;
-    ctx.fillRect(x, y, barW, barH);
-    ctx.shadowBlur = 0;
-  }
-
-  ctx.fillStyle = '#374151';
-  ctx.font = '9px monospace';
-  ctx.fillText('now', w - 24, h - 2);
-  ctx.fillText(`-${timeRange.value}m`, 2, h - 2);
-}
-
-let rafId = 0;
-function loop() { draw(); rafId = requestAnimationFrame(loop); }
-onMounted(() => loop());
-onUnmounted(() => cancelAnimationFrame(rafId));
-watch(() => store.filteredEvents.length, draw);
-</script>
-
 <template>
-  <div class="flex flex-col h-full">
-    <div class="flex items-center justify-between mb-2 shrink-0">
-      <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">📊 Live Pulse</h2>
+  <div class="h-full flex flex-col">
+    <div class="px-3 py-1.5 border-b border-border flex items-center justify-between">
+      <span class="text-xs text-gray-400 font-semibold">📊 Live Pulse</span>
       <div class="flex gap-1">
         <button
-          v-for="t in [1, 3, 5]" :key="t"
-          class="text-xs px-2 py-0.5 rounded"
-          :class="timeRange === t ? 'bg-blue-800 text-blue-200' : 'bg-gray-800 text-gray-500'"
-          @click="timeRange = t as 1 | 3 | 5"
-        >{{ t }}m</button>
+          v-for="r in TIME_RANGES"
+          :key="r.label"
+          @click="selectedRange = r.ms"
+          :class="selectedRange === r.ms ? 'bg-cyan-800 text-cyan-200' : 'text-gray-600 hover:text-gray-400'"
+          class="px-2 py-0.5 text-xs rounded transition-colors"
+        >{{ r.label }}</button>
       </div>
     </div>
-    <canvas ref="canvasEl" class="flex-1 w-full rounded" />
+    <div class="flex-1 relative">
+      <canvas ref="canvasEl" class="absolute inset-0 w-full h-full" />
+    </div>
   </div>
 </template>
+
+<script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useEventsStore } from '../stores/events'
+
+const TIME_RANGES = [
+  { label: '1m', ms: 60_000 },
+  { label: '3m', ms: 180_000 },
+  { label: '5m', ms: 300_000 },
+]
+
+const store = useEventsStore()
+const canvasEl = ref<HTMLCanvasElement | null>(null)
+const selectedRange = ref(60_000)
+let rafId = 0
+let unmounted = false
+let cachedW = 0
+let cachedH = 0
+
+function draw() {
+  if (unmounted) return  // guard against pending RAF after unmount
+  const canvas = canvasEl.value
+  if (!canvas) return
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  const dpr = window.devicePixelRatio || 1
+  const rect = canvas.getBoundingClientRect()
+  if (rect.width === 0 || rect.height === 0) {
+    if (typeof requestAnimationFrame !== 'undefined') {
+      rafId = requestAnimationFrame(draw)
+    }
+    return
+  }
+  const newW = Math.round(rect.width * dpr)
+  const newH = Math.round(rect.height * dpr)
+  if (newW !== cachedW || newH !== cachedH) {
+    canvas.width = newW
+    canvas.height = newH
+    cachedW = newW
+    cachedH = newH
+    ctx.scale(dpr, dpr)
+  }
+
+  const W = rect.width
+  const H = rect.height
+  const now = Date.now()
+  const windowMs = selectedRange.value
+  const bucketCount = 30
+  const bucketMs = windowMs / bucketCount
+
+  const events = store.filteredEvents.filter(e => e.timestamp >= now - windowMs)
+  const buckets: Map<string, number[]> = new Map()
+  const sessionIds = [...new Set(events.map(e => e.session_id))]
+
+  sessionIds.forEach(sid => buckets.set(sid, new Array(bucketCount).fill(0)))
+  events.forEach(e => {
+    const age = now - e.timestamp
+    const idx = Math.floor((windowMs - age) / bucketMs)
+    if (idx >= 0 && idx < bucketCount) {
+      buckets.get(e.session_id)![idx]++
+    }
+  })
+
+  let maxVal = 1
+  buckets.forEach(b => b.forEach(v => { if (v > maxVal) maxVal = v }))
+
+  ctx.clearRect(0, 0, W, H)
+
+  const barW = W / bucketCount
+  const colors = store.sessionColors
+
+  for (let i = 0; i < bucketCount; i++) {
+    let stackY = H
+    sessionIds.forEach(sid => {
+      const val = buckets.get(sid)![i]
+      if (val === 0) return
+      const barH = (val / maxVal) * (H - 16)
+      const color = colors[sid] ?? '#475569'
+      ctx.fillStyle = color + 'cc'
+      ctx.fillRect(i * barW + 1, stackY - barH, barW - 2, barH)
+      stackY -= barH
+    })
+  }
+
+  ctx.fillStyle = '#4b5563'
+  ctx.font = '10px monospace'
+  ctx.fillText('now', W - 24, H - 2)
+  ctx.fillText(`-${selectedRange.value / 60000}m`, 2, H - 2)
+
+  if (typeof requestAnimationFrame !== 'undefined') {
+    rafId = requestAnimationFrame(draw)
+  }
+}
+
+onMounted(() => {
+  if (typeof requestAnimationFrame !== 'undefined') {
+    rafId = requestAnimationFrame(draw)
+  }
+})
+
+onUnmounted(() => {
+  unmounted = true
+  if (typeof cancelAnimationFrame !== 'undefined') {
+    cancelAnimationFrame(rafId)
+  }
+})
+</script>
