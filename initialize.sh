@@ -125,40 +125,40 @@ cat > "${SETTINGS_FILE}" <<EOF
   },
   "hooks": {
     "SessionStart": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_start.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_start.py"}]}
     ],
     "SessionEnd": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_end.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_end.py"}]}
     ],
     "Stop": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "STOP_HOOK_ACTIVE=1 ${PYTHON_BIN} ${HOOKS_ABS}/stop.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "STOP_HOOK_ACTIVE=1 ${PYTHON_BIN} ${HOOKS_ABS}/stop.py"}]}
     ],
     "SubagentStart": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_start.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_start.py"}]}
     ],
     "SubagentStop": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_stop.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_stop.py"}]}
     ],
     "PreToolUse": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_tool_use.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_tool_use.py"}]}
     ],
     "PostToolUse": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use.py"}]}
     ],
     "PostToolUseFailure": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use_failure.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use_failure.py"}]}
     ],
     "Notification": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/notification.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/notification.py"}]}
     ],
     "PermissionRequest": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/permission_request.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/permission_request.py"}]}
     ],
     "UserPromptSubmit": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/user_prompt_submit.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/user_prompt_submit.py"}]}
     ],
     "PreCompact": [
-      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_compact.py"}]}
+      {"matcher": "*", "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_compact.py"}]}
     ]
   }
 }
@@ -224,10 +224,13 @@ echo ""
 echo -e "  1. Start the dashboard:"
 echo -e "     ${CYAN}$(dirname "${BASH_SOURCE[0]}")/start.sh${RESET}"
 echo ""
-echo -e "  2. Start Claude Code in your project:"
+echo -e "  2. Write PRD.md:"
+echo -e "     ${CYAN}${TARGET_PATH}/doc/plans/prd/PRD.md{RESET}"
+echo ""
+echo -e "  3. Start Claude Code in your project:"
 echo -e "     ${CYAN}$(dirname "${BASH_SOURCE[0]}")/claude.sh ${TARGET_PATH}${RESET}"
 echo ""
-echo -e "  3. Open the dashboard: ${CYAN}http://localhost:5173${RESET}"
+echo -e "  4. Open the dashboard: ${CYAN}http://localhost:5173${RESET}"
 echo ""
 echo -e "  ${YELLOW}Tip:${RESET} Edit ${TARGET_PATH}/.claude/settings.json to add custom tags:"
 echo -e "       ${CYAN}\"HOOK_TAGS\": \"[\\\"feat/my-branch\\\", \\\"sprint-1\\\"]\"${RESET}"
