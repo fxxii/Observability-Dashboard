@@ -10,5 +10,6 @@
   </div>
 </template>
 <script setup lang="ts">
-defineProps<{ node: any; depth: number }>()
+import type { AgentNode } from '../composables/useAgentTree'
+defineProps<{ node: AgentNode; depth: number }>()
 </script>

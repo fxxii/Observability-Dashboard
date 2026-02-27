@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { useEventsStore } from '../stores/events'
 
-interface AgentNode { session_id: string; trace_id: string; parent_session_id: string | null; children: AgentNode[]; startTime: number; stopped: boolean; agent_type: string }
+export interface AgentNode { session_id: string; trace_id: string; parent_session_id: string | null; children: AgentNode[]; startTime: number; stopped: boolean; agent_type: string }
 
 export function useAgentTree() {
   const store = useEventsStore()
@@ -12,7 +12,7 @@ export function useAgentTree() {
       if (e.event_type === 'SessionStart' || e.event_type === 'SubagentStart') {
         if (!nodeMap.has(e.session_id)) {
           let agentType = 'unknown'
-          try { agentType = JSON.parse(e.payload).agent_type ?? 'unknown' } catch {}
+          try { agentType = JSON.parse(e.payload).agent_type ?? 'unknown' } catch (err) { console.warn('[useAgentTree] Failed to parse payload', err) }
           nodeMap.set(e.session_id, { session_id: e.session_id, trace_id: e.trace_id, parent_session_id: e.parent_session_id ?? null, children: [], startTime: e.timestamp, stopped: false, agent_type: agentType })
         }
       }
@@ -22,7 +22,10 @@ export function useAgentTree() {
     const rootNodes: AgentNode[] = []
     nodeMap.forEach(node => {
       if (!node.parent_session_id || !nodeMap.has(node.parent_session_id)) rootNodes.push(node)
-      else nodeMap.get(node.parent_session_id)!.children.push(node)
+      else {
+        const parent = nodeMap.get(node.parent_session_id)
+        if (parent) parent.children.push(node)
+      }
     })
     return rootNodes
   })

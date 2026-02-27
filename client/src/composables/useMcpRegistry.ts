@@ -14,7 +14,8 @@ export function useMcpRegistry() {
       const serverName = String(p.mcp_server ?? 'unknown')
       const toolName = String(p.tool_name ?? '')
       if (!registry.has(serverName)) registry.set(serverName, { name: serverName, tools: [], lastSeen: e.timestamp, calls: 0, failures: 0 })
-      const server = registry.get(serverName)!
+      const server = registry.get(serverName)
+      if (!server) return
       if (e.timestamp > server.lastSeen) server.lastSeen = e.timestamp
       if (!server.tools.includes(toolName)) server.tools.push(toolName)
       if (e.event_type === 'PostToolUse') server.calls++
