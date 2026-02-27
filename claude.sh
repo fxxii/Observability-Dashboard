@@ -12,6 +12,9 @@ if [[ $# -lt 1 ]]; then
 fi
 
 PROJECT_DIR="$(cd "$1" && pwd)"
+PROJECT_NAME="$(basename "${PROJECT_DIR}")"
 
 cd "${PROJECT_DIR}"
-exec claude --dangerously-skip-permissions
+exec claude --dangerously-skip-permissions \
+  "/using-superpowers
+/superpowers:write-plan Read PRD at ${PROJECT_DIR}/doc/prd/PRD.md and write-plan to doc/plans/${PROJECT_NAME}-plan.md"
