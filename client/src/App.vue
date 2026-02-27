@@ -7,6 +7,7 @@
       <template #timeline><TimelinePanel /></template>
       <template #pulse><PulsePanel /></template>
     </DashboardLayout>
+    <HitlIntercept />
   </div>
 </template>
 
@@ -17,4 +18,5 @@ import CriticPanel from './components/panels/CriticPanel.vue'
 import LeadPanel from './components/panels/LeadPanel.vue'
 import TimelinePanel from './components/panels/TimelinePanel.vue'
 import PulsePanel from './components/panels/PulsePanel.vue'
+import HitlIntercept from './components/HitlIntercept.vue'
 </script>

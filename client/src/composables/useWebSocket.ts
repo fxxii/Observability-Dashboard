@@ -1,5 +1,6 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useEventsStore } from '../stores/events'
+import { useHitl } from './useHitl'
 import type { StoredEvent } from '../types/events'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4000/stream'
@@ -30,7 +31,14 @@ export function useWebSocket() {
     ws.onopen = () => { connected.value = true; console.log('[WS] Connected') }
     ws.onmessage = (e: MessageEvent) => {
       try {
-        store.addEvent(JSON.parse(e.data as string) as StoredEvent)
+        const data = JSON.parse(e.data as string) as Record<string, unknown>
+        if (data.type === 'hitl_intercept') {
+          useHitl().addIntercept(data.intercept as Parameters<ReturnType<typeof useHitl>['addIntercept']>[0])
+        } else if (data.type === 'hitl_decision') {
+          useHitl().resolveIntercept(String(data.intercept_id), data.decision as 'approved' | 'blocked')
+        } else {
+          store.addEvent(data as unknown as StoredEvent)
+        }
       } catch (err) {
         console.warn('[WS] Failed to parse message:', err)
       }
