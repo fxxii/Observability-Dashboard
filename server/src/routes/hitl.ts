@@ -53,6 +53,13 @@ export const hitlRouter = new Elysia()
       created_at: Date.now(),
     }
     intercepts.set(intercept.id, intercept)
+    // Prune oldest resolved intercepts when cap is exceeded
+    const MAX_INTERCEPTS = 500
+    if (intercepts.size > MAX_INTERCEPTS) {
+      const sorted = [...intercepts.entries()].sort((a, b) => a[1].created_at - b[1].created_at)
+      const toDelete = sorted.slice(0, intercepts.size - MAX_INTERCEPTS)
+      toDelete.forEach(([id]) => intercepts.delete(id))
+    }
     broadcast({ type: 'hitl_intercept', intercept, rule: matchedRule })
     return { action: 'intercept', intercept_id: intercept.id, message: matchedRule.message }
   })
@@ -60,9 +67,14 @@ export const hitlRouter = new Elysia()
   // Decision endpoint — called by dashboard UI
   .post('/hitl/decision', ({ body, set }) => {
     const b = body as Record<string, unknown>
+    const decision = String(b.decision ?? '')
+    if (decision !== 'approve' && decision !== 'block') {
+      set.status = 400
+      return { error: "decision must be 'approve' or 'block'" }
+    }
     const intercept = intercepts.get(String(b.intercept_id ?? ''))
     if (!intercept) { set.status = 404; return { error: 'Intercept not found' } }
-    intercept.status = b.decision === 'approve' ? 'approved' : 'blocked'
+    intercept.status = decision === 'approve' ? 'approved' : 'blocked'
     broadcast({ type: 'hitl_decision', intercept_id: intercept.id, decision: intercept.status })
     return { intercept_id: intercept.id, decision: intercept.status }
   })

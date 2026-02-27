@@ -49,12 +49,12 @@ const forkCommand = ref('')
 
 const minTimestamp = computed(() => {
   if (store.events.length === 0) return Date.now() - 3600_000
-  return Math.min(...store.events.map(e => e.timestamp))
+  return store.events.reduce((min, e) => Math.min(min, e.timestamp), Infinity)
 })
 
 const maxTimestamp = computed(() => {
   if (store.events.length === 0) return Date.now()
-  return Math.max(...store.events.map(e => e.timestamp))
+  return store.events.reduce((max, e) => Math.max(max, e.timestamp), -Infinity)
 })
 
 const sliderValue = computed(() => store.rewindTime ?? maxTimestamp.value)
@@ -65,6 +65,7 @@ const currentTimeStr = computed(() => new Date(sliderValue.value).toLocaleTimeSt
 function onSlider(e: Event) {
   const ts = Number((e.target as HTMLInputElement).value)
   store.setRewindTime(ts)
+  forkCommand.value = ''  // stale fork output is cleared when time changes
 }
 
 function forkFromHere() {

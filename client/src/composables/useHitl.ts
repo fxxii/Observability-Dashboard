@@ -26,15 +26,19 @@ export function useHitl() {
 
   async function sendDecision(interceptId: string, decision: 'approve' | 'block') {
     try {
-      await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/hitl/decision`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/hitl/decision`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ intercept_id: interceptId, decision }),
       })
+      if (res.ok) {
+        resolveIntercept(interceptId, decision === 'approve' ? 'approved' : 'blocked')
+      } else {
+        console.warn('[HITL] Server rejected decision:', res.status)
+      }
     } catch (err) {
       console.warn('[HITL] Failed to send decision:', err)
     }
-    resolveIntercept(interceptId, decision === 'approve' ? 'approved' : 'blocked')
   }
 
   return { pendingIntercepts, intercepts, addIntercept, resolveIntercept, sendDecision }

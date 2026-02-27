@@ -1,6 +1,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useEventsStore } from '../stores/events'
 import { useHitl } from './useHitl'
+import type { HitlIntercept } from './useHitl'
 import type { StoredEvent } from '../types/events'
 
 const WS_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:4000/stream'
@@ -9,6 +10,7 @@ const REST_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000'
 export function useWebSocket() {
   const connected = ref(false)
   const store = useEventsStore()
+  const { addIntercept, resolveIntercept } = useHitl()
   let ws: WebSocket | null = null
   let retryTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -33,9 +35,9 @@ export function useWebSocket() {
       try {
         const data = JSON.parse(e.data as string) as Record<string, unknown>
         if (data.type === 'hitl_intercept') {
-          useHitl().addIntercept(data.intercept as Parameters<ReturnType<typeof useHitl>['addIntercept']>[0])
+          addIntercept(data.intercept as HitlIntercept)
         } else if (data.type === 'hitl_decision') {
-          useHitl().resolveIntercept(String(data.intercept_id), data.decision as 'approved' | 'blocked')
+          resolveIntercept(String(data.intercept_id), data.decision as 'approved' | 'blocked')
         } else {
           store.addEvent(data as unknown as StoredEvent)
         }

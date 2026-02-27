@@ -37,12 +37,18 @@ def check_hitl(raw: dict) -> None:
             try:
                 _ireq = _urlreq.Request(f"{SERVER_URL}/hitl/intercepts/{_intercept_id}")
                 with _urlreq.urlopen(_ireq, timeout=1) as _iresp:
-                    _intercept_data = _json.loads(_iresp.read())
+                    _raw = _iresp.read()
+                try:
+                    _intercept_data = _json.loads(_raw)
                     _status = _intercept_data.get("status", "pending")
                     if _status != "pending":
                         break
+                except (_json.JSONDecodeError, AttributeError):
+                    # Malformed response — keep waiting, do not auto-approve
+                    continue
             except Exception:
-                break  # server unreachable — let tool proceed
+                # Network/timeout error — server unreachable, stop waiting and let tool proceed
+                break
 
         # Deny only if explicitly blocked; timeout or approval lets tool proceed
         if _status == "blocked":
