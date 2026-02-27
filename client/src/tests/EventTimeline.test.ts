@@ -20,4 +20,11 @@ describe('EventTimeline', () => {
     const wrapper = mount(EventTimeline, { global: { plugins: [getActivePinia()!] } })
     expect(wrapper.text()).toContain('No events')
   })
+
+  it('has auto-scroll toggle button', () => {
+    const wrapper = mount(EventTimeline, { global: { plugins: [createPinia()] } })
+    const autoBtn = wrapper.find('button[title="Toggle auto-scroll"]')
+    expect(autoBtn.exists()).toBe(true)
+    expect(autoBtn.text()).toContain('AUTO')
+  })
 })

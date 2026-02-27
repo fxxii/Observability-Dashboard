@@ -51,8 +51,9 @@ function toggleAutoScroll() { autoScroll.value = !autoScroll.value }
 
 function onScroll() {
   if (!listEl.value) return
-  const { scrollTop, scrollHeight, clientHeight } = listEl.value
-  autoScroll.value = scrollHeight - scrollTop - clientHeight < 50
+  const { scrollTop } = listEl.value
+  // Re-enable auto-scroll when user scrolls back to top (within 50px)
+  autoScroll.value = scrollTop < 50
 }
 
 watch(() => store.filteredEvents.length, async () => {
