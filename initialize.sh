@@ -123,40 +123,40 @@ cat > "${SETTINGS_FILE}" <<EOF
   },
   "hooks": {
     "SessionStart": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_start.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_start.py"}]}
     ],
     "SessionEnd": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_end.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/session_end.py"}]}
     ],
     "Stop": [
-      {"type": "command", "command": "STOP_HOOK_ACTIVE=1 ${PYTHON_BIN} ${HOOKS_ABS}/stop.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "STOP_HOOK_ACTIVE=1 ${PYTHON_BIN} ${HOOKS_ABS}/stop.py"}]}
     ],
     "SubagentStart": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_start.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_start.py"}]}
     ],
     "SubagentStop": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_stop.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/subagent_stop.py"}]}
     ],
     "PreToolUse": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_tool_use.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_tool_use.py"}]}
     ],
     "PostToolUse": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use.py"}]}
     ],
     "PostToolUseFailure": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use_failure.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/post_tool_use_failure.py"}]}
     ],
     "Notification": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/notification.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/notification.py"}]}
     ],
     "PermissionRequest": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/permission_request.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/permission_request.py"}]}
     ],
     "UserPromptSubmit": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/user_prompt_submit.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/user_prompt_submit.py"}]}
     ],
     "PreCompact": [
-      {"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_compact.py"}
+      {"matcher": {}, "hooks": [{"type": "command", "command": "${PYTHON_BIN} ${HOOKS_ABS}/pre_compact.py"}]}
     ]
   }
 }
