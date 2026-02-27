@@ -43,9 +43,20 @@ const serverOptions = ref<FilterOptions>({ apps: [], sessions: [], event_types: 
 async function loadOptions() {
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:4000'}/events/filter-options`)
-    if (!res.ok) return
-    serverOptions.value = await res.json() as FilterOptions
-  } catch {}
+    if (!res.ok) {
+      console.warn('[FilterPanel] Failed to load options: HTTP', res.status)
+      return
+    }
+    const data = await res.json() as FilterOptions
+    serverOptions.value = {
+      apps: Array.isArray(data.apps) ? data.apps : [],
+      sessions: Array.isArray(data.sessions) ? data.sessions : [],
+      event_types: Array.isArray(data.event_types) ? data.event_types : [],
+      tags: Array.isArray(data.tags) ? data.tags : [],
+    }
+  } catch (err) {
+    console.warn('[FilterPanel] Failed to load filter options:', err)
+  }
 }
 
 onMounted(loadOptions)
