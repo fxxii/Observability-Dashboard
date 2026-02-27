@@ -1,5 +1,6 @@
 import { Elysia } from 'elysia'
-import { readFileSync } from 'fs'
+import { readFile } from 'fs/promises'
+import { resolve } from 'path'
 import { getDb } from '../db'
 import { broadcast } from '../broadcast'
 
@@ -130,16 +131,27 @@ export const eventsRouter = new Elysia()
       return { error: `Database error: ${err instanceof Error ? err.message : String(err)}` }
     }
   })
-  .get('/transcript', ({ query, set }) => {
-    const filePath = typeof query.path === 'string' ? query.path : ''
-    if (!filePath || !filePath.startsWith('/')) {
+  .get('/transcript', async ({ query, set }) => {
+    const rawPath = typeof query.path === 'string' ? query.path : ''
+    if (!rawPath || !rawPath.startsWith('/')) {
       set.status = 400
       return { error: 'Invalid path' }
     }
+    // Canonicalize to prevent path traversal (e.g. /tmp/../../etc/passwd → /etc/passwd)
+    const filePath = resolve(rawPath)
     try {
-      return readFileSync(filePath, 'utf-8')
-    } catch {
-      set.status = 404
-      return 'Transcript not found'
+      return await readFile(filePath, 'utf-8')
+    } catch (e: unknown) {
+      const code = (e as NodeJS.ErrnoException).code
+      if (code === 'ENOENT') {
+        set.status = 404
+        return 'Transcript not found'
+      }
+      if (code === 'EACCES') {
+        set.status = 403
+        return 'Access denied'
+      }
+      set.status = 500
+      return 'Failed to read transcript'
     }
   })

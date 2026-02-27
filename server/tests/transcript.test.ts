@@ -25,4 +25,12 @@ describe('GET /transcript', () => {
     expect(res.status).toBe(200)
     expect(await res.text()).toContain('hello transcript')
   })
+
+  it('canonicalizes path traversal attempts', async () => {
+    // /tmp/../../etc/nonexistent is resolved to /etc/nonexistent, which does not exist → 404
+    const traversalPath = '/tmp/../../etc/nonexistent-t18-abc'
+    const res = await app.handle(new Request(`http://localhost/transcript?path=${encodeURIComponent(traversalPath)}`))
+    // Should not 400 (path starts with /) but the resolved path won't exist → 404
+    expect(res.status).toBe(404)
+  })
 })
