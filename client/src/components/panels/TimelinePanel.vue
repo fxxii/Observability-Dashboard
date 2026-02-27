@@ -1,6 +1,8 @@
 <template>
   <div class="h-full flex flex-col">
-    <div class="px-3 py-1.5 border-b border-border text-xs text-gray-400 font-semibold">Timeline</div>
-    <div class="flex-1 overflow-auto p-2 text-xs text-gray-500">Event timeline will appear here.</div>
+    <EventTimeline class="flex-1 min-h-0" />
   </div>
 </template>
+<script setup lang="ts">
+import EventTimeline from '../EventTimeline.vue'
+</script>
