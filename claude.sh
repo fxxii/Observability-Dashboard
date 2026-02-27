@@ -17,4 +17,4 @@ PROJECT_NAME="$(basename "${PROJECT_DIR}")"
 cd "${PROJECT_DIR}"
 exec claude --dangerously-skip-permissions \
   "/using-superpowers
-/superpowers:write-plan Read PRD at ${PROJECT_DIR}/doc/prd/PRD.md and write-plan to doc/plans/${PROJECT_NAME}-plan.md"
+/superpowers:writing-plans Read PRD at ${PROJECT_DIR}/doc/prd/PRD.md and write-plan to doc/plans/${PROJECT_NAME}-plan.md"
