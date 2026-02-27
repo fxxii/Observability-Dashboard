@@ -78,7 +78,7 @@ fi
 # ── Start server ──────────────────────────────────────────────────────────────
 info "Starting server (port 4000)…"
 
-(cd "${DASHBOARD_DIR}/server" && bun run dev >> "${SERVER_LOG}" 2>&1) &
+(cd "${DASHBOARD_DIR}/server" && bun run start >> "${SERVER_LOG}" 2>&1) &
 SERVER_PID=$!
 
 # ── Start client ──────────────────────────────────────────────────────────────
