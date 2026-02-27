@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia'
+import { readFileSync } from 'fs'
 import { getDb } from '../db'
 import { broadcast } from '../broadcast'
 
@@ -127,5 +128,18 @@ export const eventsRouter = new Elysia()
     } catch (err) {
       set.status = 500
       return { error: `Database error: ${err instanceof Error ? err.message : String(err)}` }
+    }
+  })
+  .get('/transcript', ({ query, set }) => {
+    const filePath = typeof query.path === 'string' ? query.path : ''
+    if (!filePath || !filePath.startsWith('/')) {
+      set.status = 400
+      return { error: 'Invalid path' }
+    }
+    try {
+      return readFileSync(filePath, 'utf-8')
+    } catch {
+      set.status = 404
+      return 'Transcript not found'
     }
   })
