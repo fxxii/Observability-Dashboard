@@ -32,8 +32,12 @@ const store = useEventsStore()
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const selectedRange = ref(60_000)
 let rafId = 0
+let unmounted = false
+let cachedW = 0
+let cachedH = 0
 
 function draw() {
+  if (unmounted) return  // guard against pending RAF after unmount
   const canvas = canvasEl.value
   if (!canvas) return
   const ctx = canvas.getContext('2d')
@@ -41,11 +45,21 @@ function draw() {
 
   const dpr = window.devicePixelRatio || 1
   const rect = canvas.getBoundingClientRect()
-  if (rect.width === 0 || rect.height === 0) return
-
-  canvas.width = rect.width * dpr
-  canvas.height = rect.height * dpr
-  ctx.scale(dpr, dpr)
+  if (rect.width === 0 || rect.height === 0) {
+    if (typeof requestAnimationFrame !== 'undefined') {
+      rafId = requestAnimationFrame(draw)
+    }
+    return
+  }
+  const newW = Math.round(rect.width * dpr)
+  const newH = Math.round(rect.height * dpr)
+  if (newW !== cachedW || newH !== cachedH) {
+    canvas.width = newW
+    canvas.height = newH
+    cachedW = newW
+    cachedH = newH
+    ctx.scale(dpr, dpr)
+  }
 
   const W = rect.width
   const H = rect.height
@@ -105,6 +119,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  unmounted = true
   if (typeof cancelAnimationFrame !== 'undefined') {
     cancelAnimationFrame(rafId)
   }
