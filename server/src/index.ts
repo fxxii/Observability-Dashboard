@@ -3,6 +3,7 @@ import { cors } from '@elysiajs/cors'
 import { initDb } from './db'
 import { eventsRouter } from './routes/events'
 import { streamRouter } from './routes/stream'
+import { hitlRouter } from './routes/hitl'
 import { startTtlScheduler } from './ttl'
 
 initDb()
@@ -17,6 +18,7 @@ const app = new Elysia()
   .get('/health', () => ({ status: 'ok' }))
   .use(eventsRouter)
   .use(streamRouter)
+  .use(hitlRouter)
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(4000)
