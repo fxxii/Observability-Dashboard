@@ -53,7 +53,9 @@ const sessionColor = computed(() => store.sessionColors[props.event.session_id] 
 
 const eventEmoji = computed(() => EVENT_EMOJIS[props.event.event_type] ?? '❓')
 const toolEmoji = computed(() => {
-  const toolName = parsed.value.payload.tool_name as string | undefined
+  const toolName = typeof parsed.value.payload.tool_name === 'string'
+    ? parsed.value.payload.tool_name
+    : null
   if (!toolName) return null
   if (toolName.startsWith('mcp__') || toolName.startsWith('mcp_')) return '🔌'
   return TOOL_EMOJIS[toolName] ?? null
@@ -64,10 +66,16 @@ const shortSessionId = computed(() => props.event.session_id.slice(0, 8))
 
 const summary = computed(() => {
   const p = parsed.value.payload
-  if (p.tool_name) return `${p.tool_name}${p.command ? `: ${String(p.command).slice(0, 60)}` : ''}`
-  if (p.model) return `model: ${p.model}`
-  if (p.error) return `error: ${String(p.error).slice(0, 80)}`
-  if (p.message) return String(p.message).slice(0, 80)
+  const toolName = typeof p.tool_name === 'string' ? p.tool_name : null
+  const command = typeof p.command === 'string' ? p.command : null
+  const model = typeof p.model === 'string' ? p.model : null
+  const error = typeof p.error === 'string' ? p.error : null
+  const message = typeof p.message === 'string' ? p.message : null
+
+  if (toolName) return command ? `${toolName}: ${command.slice(0, 60)}` : toolName
+  if (model) return `model: ${model}`
+  if (error) return `error: ${error.slice(0, 80)}`
+  if (message) return message.slice(0, 80)
   return ''
 })
 

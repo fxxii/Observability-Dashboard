@@ -16,11 +16,11 @@ export interface ParsedEvent extends Omit<StoredEvent, 'tags' | 'payload'> {
 }
 
 export function parseEvent(e: StoredEvent): ParsedEvent {
-  return {
-    ...e,
-    tags: JSON.parse(e.tags || '[]'),
-    payload: JSON.parse(e.payload || '{}'),
-  }
+  let tags: string[] = []
+  let payload: Record<string, unknown> = {}
+  try { tags = JSON.parse(e.tags || '[]') } catch { tags = [] }
+  try { payload = JSON.parse(e.payload || '{}') } catch { payload = {} }
+  return { ...e, tags, payload }
 }
 
 export const EVENT_EMOJIS: Record<string, string> = {
