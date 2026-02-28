@@ -84,7 +84,7 @@ SERVER_PID=$!
 # ── Start client ──────────────────────────────────────────────────────────────
 info "Starting client (port 5173)…"
 
-(cd "${DASHBOARD_DIR}/client" && bun run dev >> "${CLIENT_LOG}" 2>&1) &
+(cd "${DASHBOARD_DIR}/client" && ./node_modules/.bin/vite >> "${CLIENT_LOG}" 2>&1) &
 CLIENT_PID=$!
 
 # ── Save PIDs ────────────────────────────────────────────────────────────────
