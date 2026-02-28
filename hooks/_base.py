@@ -42,7 +42,7 @@ def build_payload(
         "payload": payload or {},
         "tags": tags,
         "parent_session_id": parent_session_id,
-        "trace_id": trace_id,
+        "trace_id": trace_id or session_id,
     }
 
 
