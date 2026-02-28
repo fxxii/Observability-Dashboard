@@ -4,9 +4,9 @@ export default {
   theme: {
     extend: {
       colors: {
-        surface: 'rgb(15 17 23 / <alpha-value>)',
-        panel:   'rgb(26 29 39 / <alpha-value>)',
-        border:  'rgb(45 49 72 / <alpha-value>)',
+        surface: '#0f1117',
+        panel:   '#1a1d27',
+        border:  '#2d3148',
       },
       fontFamily: { mono: ['JetBrains Mono', 'monospace'] },
     },
