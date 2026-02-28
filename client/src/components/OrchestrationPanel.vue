@@ -5,7 +5,7 @@
       <div class="text-gray-500 mb-1">Current Phase</div>
       <div class="flex items-center gap-2">
         <span class="text-cyan-400 font-semibold">{{ currentPhase }}</span>
-        <span v-if="currentPhase !== 'idle'" class="animate-pulse text-yellow-400">●</span>
+        <span v-if="currentPhase !== 'idle'" class="animate-pulse" :class="currentPhase === 'active' ? 'text-green-400' : 'text-yellow-400'">●</span>
       </div>
       <div class="flex gap-2 mt-2 flex-wrap">
         <div v-for="phase in PHASES" :key="phase" :class="phase === currentPhase ? 'bg-cyan-700 text-cyan-100' : 'bg-surface text-gray-600'" class="px-2 py-0.5 rounded text-[10px]">{{ phase }}</div>
@@ -34,7 +34,7 @@
 </template>
 <script setup lang="ts">
 import { useOrchestration } from '../composables/useOrchestration'
-const PHASES = ['brainstorm', 'write-plan', 'execute-plan', 'finish']
+const PHASES = ['brainstorm', 'write-plan', 'execute-plan', 'finish', 'active']
 const { currentPhase, activeSubagents, reviewGates } = useOrchestration()
 function gateClass(status?: string) {
   if (!status) return 'px-1 rounded bg-surface text-gray-700'

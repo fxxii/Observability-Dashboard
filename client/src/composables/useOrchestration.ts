@@ -3,17 +3,30 @@ import { useEventsStore } from '../stores/events'
 import { parseEvent } from '../types/events'
 
 const PHASES = ['brainstorm', 'write-plan', 'execute-plan', 'finish'] as const
-type Phase = typeof PHASES[number] | 'idle'
+type Phase = typeof PHASES[number] | 'active' | 'idle'
+
+const ACTIVE_WINDOW_MS = 60_000 // consider session active if tool use within last 60s
 
 export function useOrchestration() {
   const store = useEventsStore()
   const allEvents = computed(() => store.events.map(parseEvent))
 
   const currentPhase = computed<Phase>(() => {
-    const recent = allEvents.value.slice(0, 200)
+    const events = allEvents.value
+
+    // 1. Keyword scan in payloads (UserPromptSubmit, tool writes to plan files, etc.)
     for (const phase of [...PHASES].reverse()) {
-      if (recent.some(e => JSON.stringify(e.payload).toLowerCase().includes(phase))) return phase
+      if (events.slice(0, 200).some(e => JSON.stringify(e.payload).toLowerCase().includes(phase))) return phase
     }
+
+    // 2. Fallback: any PreToolUse/PostToolUse within the active window → 'active'
+    const now = Date.now()
+    const hasRecentActivity = events.some(e =>
+      (e.event_type === 'PreToolUse' || e.event_type === 'PostToolUse' || e.event_type === 'SubagentStart') &&
+      now - e.timestamp < ACTIVE_WINDOW_MS
+    )
+    if (hasRecentActivity) return 'active'
+
     return 'idle'
   })
 
